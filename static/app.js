@@ -1,4 +1,3 @@
-```javascript
 async function loadMessages() {
     const r = await fetch('/api/messages');
     const xs = await r.json();
@@ -86,5 +85,4 @@ document.querySelector('#form').addEventListener('submit', async e => {
 });
 
 loadMessages();
-```
 
