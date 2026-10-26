@@ -12,6 +12,10 @@ async function loadMessages() {
             minute: '2-digit'
         });
 
+        // すでにこのブラウザで「いいね済み」か判定
+        const likedKey = `liked_${x.id}`;
+        const isLiked = localStorage.getItem(likedKey);
+
         return `
             <article class="message">
                 <button type="button"
@@ -34,6 +38,14 @@ async function loadMessages() {
 
                 <div class="meta">
                     #${x.id} | ${time}
+                    <button type="button" 
+                        onclick="likeMessage(${x.id})" 
+                        class="like-button" 
+                        id="like-btn-${x.id}"
+                        style="margin-left: 10px; background: none; border: none; cursor: ${isLiked ? 'default' : 'pointer'}; color: ${isLiked ? '#999' : '#e25555'};"
+                        ${isLiked ? 'disabled' : ''}>
+                        ❤️ いいね <span id="likes-${x.id}">${x.likes !== undefined ? x.likes : 0}</span>
+                    </button>
                 </div>
             </article>
         `;
@@ -44,6 +56,25 @@ function escapeHtml(s) {
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+}
+
+// いいねを送信する関数（1回押したらブラウザに記録してグレーアウト）
+async function likeMessage(id) {
+    const likedKey = `liked_${id}`;
+    if (localStorage.getItem(likedKey)) {
+        return;
+    }
+
+    const r = await fetch(`/api/messages/${id}/like`, {
+        method: 'POST'
+    });
+
+    if (r.ok) {
+        localStorage.setItem(likedKey, 'true');
+        await loadMessages();
+    } else {
+        alert('いいねに失敗しました');
+    }
 }
 
 async function deleteMessage(id) {
@@ -85,5 +116,3 @@ document.querySelector('#form').addEventListener('submit', async e => {
 });
 
 loadMessages();
-
-

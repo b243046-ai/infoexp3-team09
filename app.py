@@ -1,4 +1,3 @@
-
 from flask import Flask, jsonify, render_template, request
 from pathlib import Path
 import sqlite3
@@ -21,8 +20,15 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             message TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            likes INTEGER NOT NULL DEFAULT 0
         )""")
+        
+        # 既存のテーブルに likes カラムがない場合の安全対策
+        try:
+            con.execute("ALTER TABLE messages ADD COLUMN likes INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
 
 
 @app.get("/")
@@ -54,7 +60,7 @@ def create_message():
 
     with connect() as con:
         cur = con.execute(
-            "INSERT INTO messages(name, message, created_at) VALUES(?, ?, ?)",
+            "INSERT INTO messages(name, message, created_at, likes) VALUES(?, ?, ?, 0)",
             (name, message, created_at)
         )
 
@@ -86,6 +92,25 @@ def update_message(message_id):
     return jsonify({"ok": True})
 
 
+@app.post("/api/messages/<int:message_id>/like")
+def like_message(message_id):
+    with connect() as con:
+        cur = con.execute(
+            "UPDATE messages SET likes = likes + 1 WHERE id = ?",
+            (message_id,)
+        )
+
+        if cur.rowcount == 0:
+            return jsonify({"error": "not found"}), 404
+
+        row = con.execute(
+            "SELECT * FROM messages WHERE id = ?",
+            (message_id,)
+        ).fetchone()
+
+    return jsonify(dict(row))
+
+
 @app.delete("/api/messages/<int:message_id>")
 def delete_message(message_id):
     with connect() as con:
@@ -103,3 +128,5 @@ def delete_message(message_id):
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=False)
+else:
+    init_db()
