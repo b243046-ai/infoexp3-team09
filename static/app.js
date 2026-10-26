@@ -34,7 +34,7 @@ document.querySelector('#form').addEventListener('submit', async e => {
     e.preventDefault();
 
     const name = document.querySelector('#name').value;
-    const message = document.querySelector('#appの内容').value;
+    const message = document.querySelector('#message').value;
 
     const r = await fetch('/api/messages', {
         method: 'POST',
@@ -46,7 +46,7 @@ document.querySelector('#form').addEventListener('submit', async e => {
         r.ok ? '投稿しました' : '投稿に失敗しました';
 
     if (r.ok) {
-        document.querySelector('#appの内容').value = '';
+        document.querySelector('#message').value = '';
         await loadMessages();
     }
 });
