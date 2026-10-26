@@ -1,3 +1,4 @@
+```javascript
 async function loadMessages() {
     const r = await fetch('/api/messages');
     const xs = await r.json();
@@ -14,8 +15,24 @@ async function loadMessages() {
 
         return `
             <article class="message">
+                <button type="button"
+                    class="delete-button"
+                    onclick="deleteMessage(${x.id})"
+                    title="投稿を削除"
+                    aria-label="投稿を削除">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M3 6h18M9 6V4h6v2m4 0-1 14H6L5 6m4 4v7m6-7v7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"/>
+                    </svg>
+                </button>
+
                 <b>${escapeHtml(x.name)}</b>
                 <p>${escapeHtml(x.message)}</p>
+
                 <div class="meta">
                     #${x.id} | ${time}
                 </div>
@@ -28,6 +45,23 @@ function escapeHtml(s) {
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+}
+
+async function deleteMessage(id) {
+    if (!confirm('この投稿を削除しますか？')) {
+        return;
+    }
+
+    const r = await fetch(`/api/messages/${id}`, {
+        method: 'DELETE'
+    });
+
+    if (r.ok) {
+        document.querySelector('#status').textContent = '削除しました';
+        await loadMessages();
+    } else {
+        document.querySelector('#status').textContent = '削除に失敗しました';
+    }
 }
 
 document.querySelector('#form').addEventListener('submit', async e => {
@@ -52,3 +86,5 @@ document.querySelector('#form').addEventListener('submit', async e => {
 });
 
 loadMessages();
+```
+
